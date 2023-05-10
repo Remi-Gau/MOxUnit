@@ -16,7 +16,7 @@ class Token(object):
         self.type = type
 
     def __str__(self):
-        return '"%s" [%s]' % (self.content, self.type)
+        return f'"{self.content}" [{self.type}]'
 
     def __repr__(self):
         return self.__str__()
@@ -73,7 +73,7 @@ class Tokenizer(object):
 
         ws_sp = re.compile(r'(\s+)')
 
-        op_re = ('([%s])' % ''.join(Tokenizer.OP_CHARS))
+        op_re = f"([{''.join(Tokenizer.OP_CHARS)}])"
         op_sp = re.compile(op_re)
 
         for line in lines:
@@ -85,11 +85,7 @@ class Tokenizer(object):
                 elif not inside_str and c == '%':
                     comment_start = i
 
-            if comment_start is None:
-                code_line = line
-            else:
-                code_line = line[:comment_start]
-
+            code_line = line if comment_start is None else line[:comment_start]
             for i, s in enumerate(ws_sp.split(code_line)):
                 is_whitespace = i % 2 == 1
                 if is_whitespace:
@@ -130,9 +126,7 @@ class TokenPattern(object):
         raise NotImplementedError
 
     def __str__(self):
-        return '%s(%s,%s)' % (self.__class__.__name__,
-                              self.content,
-                              self.type)
+        return f'{self.__class__.__name__}({self.content},{self.type})'
 
     @staticmethod
     def find(token_pats, tks, start=0, stop=None):
@@ -146,7 +140,7 @@ class TokenPattern(object):
             matches = True
             tk_pos = i_start
 
-            for j, token_pat in enumerate(token_pats):
+            for token_pat in token_pats:
                 tk_pos = token_pat._matches(tks, tk_pos)
                 if tk_pos is None:
                     matches = False
@@ -166,11 +160,9 @@ class LiteralTokenPattern(TokenPattern):
                     self.content != tk.content):
             return None
 
-        if (self.type is not None and
-                    self.type != tk.type):
-            return None
-
-        return pos + 1
+        return (
+            None if (self.type is not None and self.type != tk.type) else pos + 1
+        )
 
 
 

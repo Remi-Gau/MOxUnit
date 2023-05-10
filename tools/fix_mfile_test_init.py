@@ -141,7 +141,7 @@ def get_fix_test_diff(tks):
 
 
     # return a generator
-    return (line for line in sum(diff_lines, []))
+    return iter(sum(diff_lines, []))
 
 
 
@@ -161,9 +161,10 @@ def find_content_changes(lines):
 
 def get_diff_summary(lines, context=5):
     line_idxs = find_content_changes(lines)
-    line_candidates = set(i + c for i in line_idxs
-                          for c in xrange(-context, context + 1))
-    line_keep = list(i for i in line_candidates if i >= 0 and i < len(lines))
+    line_candidates = {
+        i + c for i in line_idxs for c in xrange(-context, context + 1)
+    }
+    line_keep = [i for i in line_candidates if i >= 0 and i < len(lines)]
     line_keep.sort()
 
     return '\n'.join([lines[i] for i in line_keep])
@@ -175,7 +176,7 @@ def process_with_args(args):
 
     filename = args.filename
     if not filename.endswith('.m'):
-        logging.error('File "%s" is not .m file, skip' % filename)
+        logging.error(f'File "{filename}" is not .m file, skip')
         sys.exit(1)
 
     tks = Tokenizer.from_file(filename)
@@ -196,14 +197,13 @@ def process_with_args(args):
             with open(filename, 'w') as f:
                 f.write('\n'.join(fixed_lines))
 
-            logging.info('File "%s" was rewritten' % filename)
+            logging.info(f'File "{filename}" was rewritten')
 
         else:
-            logging.info('Changes not applied; use --apply to rewrite "%s"' %
-                         filename)
+            logging.info(f'Changes not applied; use --apply to rewrite "{filename}"')
 
     else:
-        logging.info('File "%s" does not require changes' % filename)
+        logging.info(f'File "{filename}" does not require changes')
 
 
 
